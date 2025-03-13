@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import time
-from controller.exchange_controller import get_live_data, get_historical_data
-from view.visualization import plot_live_prices, plot_historical_trend
+from controller.exchange_controller import get_live_data, fetch_candlestick_data
+from view.visualization import plot_live_prices, plot_candlestick_chart
+from model.crypto_data import VALID_OHLC_DAYS
 from streamlit.runtime.caching import cache_data
 
 def run_app():
@@ -19,8 +20,8 @@ def run_app():
     available_coins = live_data['name'].tolist() if live_data is not None else ["bitcoin", "ethereum"]
     selected_coin = st.sidebar.selectbox("Select Cryptocurrency", available_coins).lower()
 
-    # Historical data range filter
-    selected_days = st.sidebar.slider("Select Historical Data Range (days)", 1, 90, 30)
+    # ✅ Candlestick Data Range Selection (Restricted to Valid OHLC Days)
+    selected_days = st.sidebar.selectbox("Select Candlestick Data Range (days)", VALID_OHLC_DAYS[:-1])  # Exclude "max"
 
     st.write("*Note: Prices are refreshed every 10 minutes.*")
 
@@ -48,21 +49,22 @@ def run_app():
                 "price_change_24h": st.column_config.NumberColumn("24h Change", format="%.2f"),
                 "price_change_percentage_24h": st.column_config.NumberColumn("24h Change (%)", format="%.2f"),
             },
-            hide_index=True,  # ✅ Hide the default index column
+            hide_index=True,
         )
 
-        # ✅ Add one paragraph space before the graph
-        st.write("")  
+        # ✅ Add space before the candlestick chart
+        st.write("")
 
-        # ✅ Fetch & Display Historical Price Trend
-        st.subheader(f"{selected_coin.capitalize()} Price Trend (Last {selected_days} Days)")
-        historical_data = get_historical_data(selected_coin, selected_currency, selected_days)
+        # ✅ Fetch & Display Candlestick Chart
+        st.subheader(f"{selected_coin.capitalize()} Candlestick Chart (Last {selected_days} Days)")
 
-        if historical_data is not None:
-            historical_chart = plot_historical_trend(historical_data, selected_coin)
-            st.plotly_chart(historical_chart)
+        candlestick_data = fetch_candlestick_data(selected_coin, selected_currency, selected_days)
+
+        if candlestick_data is not None:
+            candlestick_chart = plot_candlestick_chart(candlestick_data, selected_coin)
+            st.plotly_chart(candlestick_chart)
         else:
-            st.warning(f"No historical data found for {selected_coin}.")
+            st.warning(f"No candlestick data found for {selected_coin}.")
 
     else:
         st.warning("Failed to fetch live cryptocurrency data.")

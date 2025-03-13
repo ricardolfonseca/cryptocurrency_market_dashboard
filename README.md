@@ -11,7 +11,7 @@
 - ✅ **Interactive Visualizations** — Uses **Plotly** for price trend analysis.
 - ✅ **Multi-Currency Support** — Switch between **USD, EUR, and GBP**.
 - ✅ **Compact & Readable Data Table** — Includes **crypto logos** and formatted numbers.
-- ✅ **Historical Price Trends** — Select up to **90 days** of historical data.
+- ✅ **Historical Price Trends** — Select up to **365 days** of historical data.
 - ✅ **Automatic Updates** — Refreshes prices **every 10 minutes**.
 - ✅ **User-Friendly Interface** — Sidebar filters for easy cryptocurrency selection.
 
@@ -31,7 +31,7 @@ This dashboard fetches data from the **CoinGecko API**, providing up-to-date cry
 
 ### **2️⃣ Historical Price Trends**
 - **Date-Based Price Data** — Allows users to view price trends over a selected period.
-- **Time Range** — Users can select a range between **1 and 90 days**.
+- **Candlestick Time Range** — Users can select a range between **1 and 365 days**.
 - **Interactive Graphs** — View price movements with zoom and hover functionality.
 
 ---
@@ -66,8 +66,8 @@ streamlit run main.py
    - A table with **prices, market caps, and 24-hour changes** will be displayed.
 
 4. **Analyze Historical Trends**  
-   - Choose a **time range (1-90 days)** in the sidebar slider.
-   - View an **interactive price trend chart**.
+   - Choose a **time range (1-365 days)** in the sidebar slider.
+   - View an **interactive price trend candle chart**.
 
 5. **Automatic Updates**  
    - The dashboard **refreshes data every 10 minutes**.
