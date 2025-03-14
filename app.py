@@ -14,6 +14,7 @@ def run_app():
     # Sidebar - User selection
     st.sidebar.header("Settings")
     selected_currency = st.sidebar.selectbox("Select Currency", ["usd", "eur", "gbp"])
+    currency_symbol = {"usd": "USD", "eur": "EUR", "gbp": "GBP"}[selected_currency]  # Map currency codes to symbols
 
     # Fetch live data to populate cryptocurrency selection
     live_data = get_live_data(currency=selected_currency)
@@ -35,18 +36,18 @@ def run_app():
             if col in live_data.columns:
                 live_data[col] = live_data[col].round(2)  # Round numbers
 
-        # ✅ Display table with images and formatted numbers
+        # ✅ Display table with dynamically updated currency label
         st.subheader("Live Cryptocurrency Prices")
         st.dataframe(
             live_data,
             column_config={
                 "image": st.column_config.ImageColumn("Logo", width="small"),
-                "current_price": st.column_config.NumberColumn("Price (USD)", format="%.2f"),
+                f"current_price": st.column_config.NumberColumn(f"Price ({currency_symbol})", format="%.2f"),
                 "market_cap": st.column_config.NumberColumn("Market Cap", format="%.2f"),
                 "total_volume": st.column_config.NumberColumn("Total Volume", format="%.2f"),
-                "high_24h": st.column_config.NumberColumn("24h High", format="%.2f"),
-                "low_24h": st.column_config.NumberColumn("24h Low", format="%.2f"),
-                "price_change_24h": st.column_config.NumberColumn("24h Change", format="%.2f"),
+                "high_24h": st.column_config.NumberColumn(f"24h High ({currency_symbol})", format="%.2f"),
+                "low_24h": st.column_config.NumberColumn(f"24h Low ({currency_symbol})", format="%.2f"),
+                "price_change_24h": st.column_config.NumberColumn(f"24h Change ({currency_symbol})", format="%.2f"),
                 "price_change_percentage_24h": st.column_config.NumberColumn("24h Change (%)", format="%.2f"),
             },
             hide_index=True,
