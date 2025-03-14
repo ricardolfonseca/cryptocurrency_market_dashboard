@@ -2,6 +2,8 @@
 
 🚀 A **real-time cryptocurrency tracking dashboard** built with **Streamlit, CoinGecko API, and Plotly**. This project provides **live prices, historical trends, and interactive visualizations** for various cryptocurrencies.
 
+Visit the Dashboard Live: https://cryptocurrency-market-dashboard.streamlit.app/
+
 > **Collaborators:** [ricardolfonseca](https://github.com/ricardolfonseca) & [invoany](https://github.com/invoany)
 
 ---
