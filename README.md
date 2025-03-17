@@ -25,8 +25,7 @@ This dashboard fetches data from the **CoinGecko API**, providing up-to-date cry
 - **Name & Logo** — Name and official icon of the cryptocurrency.
 - **Current Price** — The latest market price.
 - **Market Cap** — Total market capitalization (circulating supply × price).
-- **24H High & Low** — The highest and lowest price in the last 24 hours.
-- **Price Change (24H)** — Absolute and percentage change in price over the last 24 hours.
+- **All Time High (ath)** - Highest price for cryptocurrency.
 - **Total Volume** — Total trading volume in the last 24 hours.
 
 ### **2️⃣ Historical Price Trends**
