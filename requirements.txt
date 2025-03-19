@@ -3,5 +3,3 @@ pandas
 requests
 plotly
 urllib3
-time
-logging
