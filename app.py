@@ -6,9 +6,14 @@ from view.visualization import plot_live_prices, plot_candlestick_chart
 from model.crypto_data import VALID_OHLC_DAYS
 from streamlit.runtime.caching import cache_data
 
+# ✅ Cache live data to reduce API calls
+@cache_data(ttl=600)  # Cache data for 10 minutes
+def get_cached_live_data(currency):
+    return get_live_data(currency)
+
 def run_app():
     """Runs the Streamlit Cryptocurrency Market Dashboard."""
-
+    
     st.title("📈 Cryptocurrency Market Dashboard")
 
     # ✅ Dashboard Description
@@ -30,8 +35,14 @@ def run_app():
     selected_currency = st.sidebar.selectbox("Select Currency", ["usd", "eur", "gbp"])
     currency_symbol = {"usd": "USD", "eur": "EUR", "gbp": "GBP"}[selected_currency]  # Map currency codes to symbols
 
-    # Fetch live data to populate cryptocurrency selection
-    live_data = get_live_data(currency=selected_currency)
+    # ✅ Use cached data instead of calling the API directly
+    live_data = get_cached_live_data(selected_currency)
+
+    # If API rate limit is hit, warn the user
+    if live_data is None:
+        st.warning("⚠️ CoinGecko API rate limit reached. Try again in a few minutes.")
+        st.stop()  # Stop execution to prevent errors
+
     available_coins = live_data['name'].tolist() if live_data is not None else ["bitcoin", "ethereum"]
     selected_coin = st.sidebar.selectbox("Select Cryptocurrency", available_coins).lower()
 
@@ -99,7 +110,7 @@ def run_app():
             },
             hide_index=True,
         )
-    
+
         # Fetch & Display Candlestick Chart
         if selected_days == 1:
             st.subheader(f"{selected_coin.capitalize()} Price Chart for the last 24 hours")
@@ -112,7 +123,8 @@ def run_app():
             This candlestick chart visualizes the historical price movements of the selected cryptocurrency.
             Each candlestick represents a time period, showing **opening, highest, lowest, and closing prices**.
             Green candles indicate price increases, while red candles show declines.
-            """)
+            """
+        )
 
         candlestick_data = fetch_candlestick_data(selected_coin, selected_currency, selected_days)
 
