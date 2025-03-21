@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import time
 from controller.exchange_controller import get_live_data, fetch_candlestick_data
 from view.visualization import plot_live_prices, plot_candlestick_chart
 from model.crypto_data import VALID_OHLC_DAYS
