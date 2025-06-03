@@ -73,10 +73,10 @@ streamlit run main.py
 ## **⚙️ Project Structure**
 ```
 cryptocurrency_market_dashboard/
-├── main.py                     # App entry point
-├── app.py                      # Streamlit UI
+├── main.py                      # App entry point
+├── app.py                       # Streamlit UI
 ├── controller/
-│   ├── exchange_controller.py  # Handles API calls
+│   ├── exchange_controller.py   # Handles API calls
 ├── model/
 │   ├── crypto_data.py           # Fetches live & historical data
 │   ├── data_treatment.py        # Logging & configuration
