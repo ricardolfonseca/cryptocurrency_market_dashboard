@@ -86,7 +86,6 @@ cryptocurrency_market_dashboard/
 ├── README.md                 # Project documentation
 ```
 
----
 
 ## **🔧 Tech Stack**
 - 🐍 **Python** — Core programming language.
