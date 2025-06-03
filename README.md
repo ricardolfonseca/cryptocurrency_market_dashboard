@@ -6,7 +6,6 @@ Visit the Dashboard Live: https://cryptocurrency-market-dashboard.streamlit.app/
 
 > **Collaborators:** [ricardolfonseca](https://github.com/ricardolfonseca) & [invoany](https://github.com/invoany)
 
----
 
 ## **🌟 Features**
 - ✅ **Live Cryptocurrency Prices** — Fetches **real-time market data** from CoinGecko.
@@ -17,7 +16,6 @@ Visit the Dashboard Live: https://cryptocurrency-market-dashboard.streamlit.app/
 - ✅ **Automatic Updates** — Refreshes prices **every 10 minutes**.
 - ✅ **User-Friendly Interface** — Sidebar filters for easy cryptocurrency selection.
 
----
 
 ## **📊 Data Explanation**
 This dashboard fetches data from the **CoinGecko API**, providing up-to-date cryptocurrency market details. The following information is displayed:
@@ -35,7 +33,6 @@ This dashboard fetches data from the **CoinGecko API**, providing up-to-date cry
 - **Candlestick Time Range** — Users can select a range between **1 and 365 days**.
 - **Interactive Graphs** — View price movements with zoom and hover functionality.
 
----
 
 ## **📥 Installation**
 ### **1️⃣ Clone the Repository**
@@ -54,7 +51,6 @@ pip install -r requirements.txt
 streamlit run main.py
 ```
 
----
 
 ## **🖥️ How to Use the Dashboard**
 1. **Select Your Currency**  
@@ -73,7 +69,6 @@ streamlit run main.py
 5. **Automatic Updates**  
    - The dashboard **refreshes data every 10 minutes**.
 
----
 
 ## **⚙️ Project Structure**
 ```
