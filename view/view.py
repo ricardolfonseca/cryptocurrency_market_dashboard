@@ -49,7 +49,7 @@ def create_candlestick_chart(data, coin_name):
     # Update layout
     fig.update_layout(
         title={
-            'text': f'{coin_name.upper()} - Candlestick Chart',
+            'text': f'{coin_name.capitalize()} - Candlestick Chart',
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',

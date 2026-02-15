@@ -1,10 +1,8 @@
 """
 Model layer for Cryptocurrency Dashboard.
-Handles data fetching, configuration, and logging.
+Handles data fetching, logging, and utilities.
 """
 
-import json
-import os
 import logging
 import pandas as pd
 import requests
@@ -12,8 +10,11 @@ from datetime import datetime
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# CONFIGURATION & LOGGING
+# CONSTANTS
+BASE_URL = "https://api.coingecko.com/api/v3/"
+VALID_OHLC_DAYS = [1, 7, 14, 30, 90, 180, 365, "max"]
 
+# LOGGING CONFIGURATION
 class CustomFormatter(logging.Formatter):
     """Custom logging formatter with milliseconds."""
     
@@ -23,7 +24,7 @@ class CustomFormatter(logging.Formatter):
 
 def configure_logging():
     """
-    Configure application logging.
+    Configure application logging (call once at startup).
     """
     log_format = '[%(asctime)s] [%(levelname)s] %(message)s'
     formatter = CustomFormatter(log_format)
@@ -41,50 +42,23 @@ def configure_logging():
     # Configure logging
     logging.basicConfig(level=logging.DEBUG, handlers=[file_handler, console_handler])
 
-# Global variable for config warning
-_config_loaded = False
-
-def load_config():
-    """
-    Load configuration from JSON file or use defaults.
-    """
-    global _config_loaded
-    config_file = "config/config.json"
-    
-    if os.path.exists(config_file):
-        with open(config_file, "r") as file:
-            return json.load(file)
-    
-    # Show warning only once
-    if not _config_loaded:
-        logging.warning("Config file not found. Using defaults.")
-        _config_loaded = True
-    
-    return {"base_url": "https://api.coingecko.com/api/v3/"}
-
-
 # DATA FETCHING FUNCTIONS
-
-# Valid OHLC time ranges supported by CoinGecko
-VALID_OHLC_DAYS = [1, 7, 14, 30, 90, 180, 365, "max"]
-
 def closest_valid_days(days):
     """
-    Find the closest valid OHLC time range.
+    Find the closest valid OHLC time range supported by CoinGecko.
     
     Args:
         days (int): Requested number of days
         
     Returns:
-        int: Closest valid day count
+        int: Closest valid day count (excludes "max")
     """
-    # Exclude "max" for rounding
     return min(VALID_OHLC_DAYS[:-1], key=lambda x: abs(x - days))
 
 def requests_retry_session(retries=3, backoff_factor=0.3, 
                           status_forcelist=(500, 502, 503, 504)):
     """
-    Create a retry session for API requests.
+    Create a requests session with retry strategy.
     
     Args:
         retries (int): Number of retries
@@ -116,9 +90,7 @@ def fetch_crypto_data(currency="usd"):
     Returns:
         pandas.DataFrame or None: Market data or None if error
     """
-    config = load_config()
-    base_url = config["base_url"]
-    url = f"{base_url}coins/markets?vs_currency={currency}&order=market_cap_desc&per_page=10&page=1"
+    url = f"{BASE_URL}coins/markets?vs_currency={currency}&order=market_cap_desc&per_page=10&page=1"
     
     try:
         session = requests_retry_session()
@@ -131,22 +103,18 @@ def fetch_crypto_data(currency="usd"):
 
 def fetch_candlestick_data(coin_id="bitcoin", currency="usd", days=30):
     """
-    Fetch historical OHLC (Open, High, Low, Close) prices.
+    Fetch historical OHLC (Open, High, Low, Close) prices from CoinGecko.
     
     Args:
-        coin_id (str): Cryptocurrency ID
+        coin_id (str): Cryptocurrency ID (e.g., 'bitcoin')
         currency (str): Currency code
         days (int): Number of days for historical data
         
     Returns:
         pandas.DataFrame or None: OHLC data or None if error
     """
-    config = load_config()
-    base_url = config["base_url"]
-    
-    # Adjust days to closest valid range
     valid_days = closest_valid_days(days)
-    url = f"{base_url}coins/{coin_id}/ohlc?vs_currency={currency}&days={valid_days}"
+    url = f"{BASE_URL}coins/{coin_id}/ohlc?vs_currency={currency}&days={valid_days}"
     
     try:
         session = requests_retry_session()
@@ -157,35 +125,28 @@ def fetch_candlestick_data(coin_id="bitcoin", currency="usd", days=30):
         df = pd.DataFrame(data, columns=["timestamp", "open", "high", "low", "close"])
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
         
-        logging.info(f"Fetched OHLC data for {coin_id}: {valid_days} days")
+        logging.info(f"Fetched OHLC data for {coin_id}: {valid_days} days (requested: {days})")
         return df
     except requests.RequestException as e:
         logging.error(f"Error fetching candlestick data for {coin_id}: {e}")
         return None
 
-
 # UTILITY FUNCTIONS
-
 def format_price(price, currency="USD"):
     """
     Format price with currency symbol.
     
     Args:
         price (float): Price value
-        currency (str): Currency code
+        currency (str): Currency code (usd, eur, gbp or USD, EUR, GBP)
         
     Returns:
         str: Formatted price string
     """
     currency_symbols = {
-        "usd": "$",
-        "eur": "€", 
-        "gbp": "£",
-        "USD": "$",
-        "EUR": "€",
-        "GBP": "£"
+        "usd": "$", "eur": "€", "gbp": "£",
+        "USD": "$", "EUR": "€", "GBP": "£"
     }
-    
     symbol = currency_symbols.get(currency, "$")
     return f"{symbol}{price:,.2f}"
 

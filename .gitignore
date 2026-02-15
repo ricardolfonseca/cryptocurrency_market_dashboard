@@ -1,9 +1,3 @@
 __pycache__/
 *.py[cod]
 *$py.class
-.devcontainer/
-
-# Test files
-devcontainer.json
-data_fetch.py
-historical_data.py
