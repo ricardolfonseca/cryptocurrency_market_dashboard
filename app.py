@@ -1,19 +1,24 @@
 """
 Streamlit application for Cryptocurrency Dashboard.
-Main view layer that coordinates with controller and model.
+Main view layer that coordinates with controller and view.
 """
 
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-from controller.controller import get_live_data, get_candlestick_data
-from view.view import create_candlestick_chart
-from model.model import VALID_OHLC_DAYS, format_price
+from controller.controller import (
+    get_live_data,
+    get_candlestick_data,
+    ask_chatbot,
+    VALID_OHLC_DAYS
+)
+from view.view import create_candlestick_chart, MarketDataFormatter as fmt
 
-# Cache live data for 60 seconds (1 minute)
+# Cache live data for 60 seconds
 @st.cache_data(ttl=60)
 def get_cached_live_data(currency):
+    st.session_state.last_refresh_time = datetime.now()
     return get_live_data(currency)
 
 def run_app():
@@ -21,53 +26,88 @@ def run_app():
         page_title="Crypto Dashboard",
         layout="wide",
         page_icon="📈",
-        initial_sidebar_state="expanded"
+        initial_sidebar_state="auto"
     )
-    st.title("📈 Cryptocurrency Market Dashboard")
-    st.caption(f"🕒 Last Refreshed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    if "last_refresh_time" not in st.session_state:
+        st.session_state.last_refresh_time = datetime.now()
 
+    # ---- Top bar with title and chat button ----
+    col1, col2, col3 = st.columns([6, 1, 1])
+    with col1:
+        st.title("📈 Cryptocurrency Market Dashboard")
+    with col3:
+        # Chat popover button
+        with st.popover("💬 Chat", use_container_width=True):
+            if "chat_history" not in st.session_state:
+                st.session_state.chat_history = []
+
+            for msg in st.session_state.chat_history:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+
+            if prompt := st.chat_input("Ask about cryptocurrencies..."):
+                st.session_state.chat_history.append({"role": "user", "content": prompt})
+                with st.chat_message("user"):
+                    st.markdown(prompt)
+
+                with st.chat_message("assistant"):
+                    with st.spinner("Thinking..."):
+                        live_data = st.session_state.get("live_data", None)
+                        currency = st.session_state.get("selected_currency", "usd")
+                        response = ask_chatbot(prompt, live_data, currency.upper())
+                        st.markdown(response)
+                st.session_state.chat_history.append({"role": "assistant", "content": response})
+                st.rerun()
+
+    # ---- Main dashboard description ----
     st.markdown("""
     Get **real-time cryptocurrency data** powered by **CoinGecko API**.
 
     Track **live prices**, analyze **historical trends** with **candlestick charts**, 
-    and switch between **USD, EUR, and GBP**.
+    and switch between **USD and EUR**.
 
     ### How to use:
-    1️⃣ **Choose a Currency** – Select **USD, EUR, or GBP** from the sidebar.  
-    2️⃣ **Select a Cryptocurrency** – Pick from the available options.  
-    3️⃣ **Adjust Time Range** – Choose a period for historical price analysis.
+    1️⃣ **Choose a Currency** - Select **USD or EUR** from the sidebar.  
+    2️⃣ **Select a Cryptocurrency** - Pick from the available options.  
+    3️⃣ **Adjust Time Range** - Choose a period for historical price analysis.
     """)
 
+    # ---- Sidebar ----
     with st.sidebar:
         st.header("Settings")
-        selected_currency = st.selectbox("Select Currency", ["usd", "eur", "gbp"])
-        currency_symbol = {"usd": "USD", "eur": "EUR", "gbp": "GBP"}[selected_currency]
-        
+        selected_currency = st.selectbox("Select Currency", ["usd", "eur"])
+        st.session_state.selected_currency = selected_currency
+        currency_symbol = {"usd": "USD", "eur": "EUR"}[selected_currency]
+
         live_data = get_cached_live_data(selected_currency)
-        
         if live_data is None:
             st.warning("⚠️ CoinGecko API rate limit reached. Try again in a few minutes.")
             st.stop()
-        
+
+        st.session_state.live_data = live_data
+
         available_coins = live_data['name'].tolist()
         selected_coin = st.selectbox("Select Cryptocurrency", available_coins).lower()
-        
+
         st.subheader("Historical Data")
         selected_days = st.selectbox(
-            "Select Time Range (days)", 
-            VALID_OHLC_DAYS[:-1],
+            "Select Time Range (days)",
+            VALID_OHLC_DAYS[:-1],  # Exclude "max"
             help="Choose the time period for historical price analysis"
         )
 
+    # ---- Main content ----
     if live_data is not None:
         display_live_data(live_data, currency_symbol)
         display_candlestick_chart(selected_coin, selected_currency, selected_days)
 
 def display_live_data(live_data, currency_symbol):
-    st.subheader("Live Cryptocurrency Prices")
-    
+    st.subheader("Live Cryptocurrency Prices 🕒")
+    last_refresh = st.session_state.last_refresh_time
+    st.caption(f'Last refreshed: {last_refresh.strftime("%Y-%m-%d %H:%M:%S")}')
+
     display_df = prepare_live_data_table(live_data, currency_symbol)
-    
+
     st.dataframe(
         display_df,
         column_config={
@@ -90,7 +130,7 @@ def display_live_data(live_data, currency_symbol):
 
 def prepare_live_data_table(data, currency_symbol):
     df = data.copy()
-    
+
     column_mapping = {
         'market_cap_rank': 'Rank',
         'name': 'name',
@@ -105,17 +145,17 @@ def prepare_live_data_table(data, currency_symbol):
         'ath_change_percentage': 'All Time High Change %',
         'ath_date': 'All Time High Date'
     }
-    
+
     display_columns = [col for col in column_mapping.keys() if col in df.columns]
     df = df[display_columns]
     df = df.rename(columns=column_mapping)
-    
+
     if 'All Time High Date' in df.columns:
         df['All Time High Date'] = pd.to_datetime(df['All Time High Date']).dt.date
-    
+
     if 'Dominance (%)' in df.columns:
         df['Dominance (%)'] = df['Dominance (%)'] * 100
-    
+
     return df
 
 def display_candlestick_chart(coin_id, currency, days):
@@ -123,8 +163,7 @@ def display_candlestick_chart(coin_id, currency, days):
         st.subheader(f"{coin_id.capitalize()} Price Chart - Last 24 Hours")
     else:
         st.subheader(f"{coin_id.capitalize()} Price Chart - Last {days} Days")
-    
-    # Chart description
+
     st.markdown("""
     This candlestick chart visualizes historical price movements:
     - **Green candles**: Price increased during the period
@@ -132,37 +171,37 @@ def display_candlestick_chart(coin_id, currency, days):
     - Each candle shows: Open, High, Low, Close prices
     """)
 
+    st.caption(
+        "Note: The chart shows historical data. The latest candle's close may differ from "
+        "the current live price in the table above, as that updates more frequently."
+    )
+
     with st.spinner(f"Loading {days}-day data for {coin_id}..."):
         candlestick_data = get_candlestick_data(coin_id, currency, days)
-    
+
     if candlestick_data is not None and not candlestick_data.empty:
-        # Note about price difference (in popover) - positioned on the right
-        col1, col2 = st.columns([10, 1])
-        with col2:
-            with st.popover("ℹ️"):
-                st.text(
-                    "Note: The chart shows historical data. The latest candle's close may differ from "
-                    "the current live price in the table above, as that updates more frequently."
-                )
-        
-        chart = create_candlestick_chart(candlestick_data, coin_id)
+        # Pass the currency to the chart function for proper axis label and tick prefix
+        chart = create_candlestick_chart(candlestick_data, coin_id, currency.upper())
         st.plotly_chart(chart, use_container_width=True)
-        
+
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             latest_close = candlestick_data['close'].iloc[-1]
-            st.metric("💰 Latest Close", format_price(latest_close, currency))
+            st.metric("💰 Latest Close (Period End)", fmt.format_price(latest_close, currency))
         with col2:
             price_change = candlestick_data['close'].iloc[-1] - candlestick_data['open'].iloc[0]
             change_pct = (price_change / candlestick_data['open'].iloc[0]) * 100
             sign = "+" if price_change >= 0 else "-"
             period_label = "📈 Period Change (last 24 Hours)" if days == 1 else f"📈 Period Change (last {days} Days)"
-            st.metric(period_label, f"{sign}{format_price(abs(price_change), currency)}", delta=f"{sign}{abs(change_pct):.2f}%", delta_color="normal")
+            st.metric(period_label,
+                      f"{sign}{fmt.format_price(abs(price_change), currency)}",
+                      delta=f"{sign}{abs(change_pct):.2f}%",
+                      delta_color="normal")
         with col3:
             highest = candlestick_data['high'].max()
-            st.metric("⬆️ Period High", format_price(highest, currency))
+            st.metric("⬆️ Period High", fmt.format_price(highest, currency))
         with col4:
             lowest = candlestick_data['low'].min()
-            st.metric("⬇️ Period Low", format_price(lowest, currency))
+            st.metric("⬇️ Period Low", fmt.format_price(lowest, currency))
     else:
         st.warning(f"No historical data found for {coin_id}.")

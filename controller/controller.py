@@ -1,27 +1,29 @@
 """
 Controller layer for the Cryptocurrency Dashboard.
-Handles business logic and coordinates between model and view.
+Coordinates between model and view, providing simplified access to data and services.
 """
 
 import logging
-from model.model import *
+from model.CryptoDataProvider import CryptoDataProvider, VALID_OHLC_DAYS
+from model.GeminiChat import GeminiChat
 
-# Configurar logging
-logging.basicConfig(level=logging.INFO)
+# Configuração básica de logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# Instância única do chatbot Gemini (usa as secrets do Streamlit)
+_gemini_chat = GeminiChat()
 
 def get_live_data(currency="usd"):
     """
     Fetch real-time cryptocurrency market data.
-    
     Args:
-        currency (str): Currency code (usd, eur, gbp)
-        
+        currency (str): 'usd' or 'eur'
     Returns:
-        pandas.DataFrame or None: Market data or None if error
+        pandas.DataFrame or None
     """
     try:
-        return fetch_crypto_data(currency)
+        return CryptoDataProvider.fetch_crypto_data(currency)
     except Exception as e:
         logger.error(f"Error in get_live_data: {e}")
         return None
@@ -29,26 +31,31 @@ def get_live_data(currency="usd"):
 def get_candlestick_data(coin_id, currency, days):
     """
     Fetch historical OHLC data for a cryptocurrency.
-    
     Args:
-        coin_id (str): Cryptocurrency ID (e.g., 'bitcoin')
-        currency (str): Currency code
-        days (int): Number of days for historical data
-        
+        coin_id (str): e.g., 'bitcoin'
+        currency (str): 'usd' or 'eur'
+        days (int): number of days
     Returns:
-        pandas.DataFrame or None: OHLC data or None if error
+        pandas.DataFrame or None
     """
     try:
-        return fetch_candlestick_data(coin_id, currency, days)
+        return CryptoDataProvider.fetch_candlestick_data(coin_id, currency, days)
     except Exception as e:
         logger.error(f"Error in get_candlestick_data: {e}")
         return None
 
-def get_config():
+def ask_chatbot(question, live_data=None, currency="USD"):
     """
-    Get application configuration.
-    
+    Send a question to the Gemini chatbot with market context.
+    Args:
+        question (str): user's question
+        live_data (DataFrame): current market data (optional)
+        currency (str): currency code (USD, EUR)
     Returns:
-        dict: Configuration dictionary
+        str: chatbot's response
     """
-    return load_config()
+    try:
+        return _gemini_chat.get_response(question, live_data, currency)
+    except Exception as e:
+        logger.error(f"Error in ask_chatbot: {e}")
+        return f"Sorry, an error occurred: {str(e)}"
