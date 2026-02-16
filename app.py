@@ -125,7 +125,7 @@ def display_live_data(live_data, currency_symbol):
             "All Time High Date": st.column_config.DateColumn("ATH Date", format="YYYY-MM-DD"),
         },
         hide_index=True,
-        use_container_width=True
+        width="stretch"
     )
 
 def prepare_live_data_table(data, currency_symbol):
@@ -194,7 +194,7 @@ def display_candlestick_chart(coin_id, currency, days):
 
     if candlestick_data is not None and not candlestick_data.empty:
         chart = create_candlestick_chart(candlestick_data, coin_id, currency.upper())
-        st.plotly_chart(chart, use_container_width=True)
+        st.plotly_chart(chart, width="stretch")
 
         col1, col2, col3, col4 = st.columns(4)
         with col1:
