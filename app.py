@@ -102,7 +102,7 @@ def run_app():
         display_candlestick_chart(selected_coin, selected_currency, selected_days)
 
 def display_live_data(live_data, currency_symbol):
-    st.subheader("Live Cryptocurrency Prices 🕒")
+    st.subheader("Live Cryptocurrency Prices")
     last_refresh = st.session_state.last_refresh_time
     st.caption(f'Last refreshed: {last_refresh.strftime("%Y-%m-%d %H:%M:%S")}')
 
@@ -163,13 +163,13 @@ def prepare_live_data_table(data, currency_symbol):
     # Columns with 0 decimals and symbol
     for col in ['market_cap', 'total_volume']:
         if col in df.columns:
-            df[col] = df[col].apply(lambda x: f"{symbol}{x:,.0f}")  # Adicionado símbolo
+            df[col] = df[col].apply(lambda x: f"{x:,.0f}")
 
     # Circulating Supply: without symbol, two decimal places
     if 'Circulating Supply' in df.columns:
         df['Circulating Supply'] = df['Circulating Supply'].apply(lambda x: f"{x:,.2f}")
 
-    return df  # <-- The return should be here, with no code after it
+    return df
 
 def display_candlestick_chart(coin_id, currency, days):
     if days == 1:
@@ -194,7 +194,7 @@ def display_candlestick_chart(coin_id, currency, days):
 
     if candlestick_data is not None and not candlestick_data.empty:
         chart = create_candlestick_chart(candlestick_data, coin_id, currency.upper())
-        st.plotly_chart(chart, use_container_width=True)  # Corrigido
+        st.plotly_chart(chart, use_container_width=True)
 
         col1, col2, col3, col4 = st.columns(4)
         with col1:
