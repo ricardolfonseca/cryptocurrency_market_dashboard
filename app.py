@@ -37,7 +37,7 @@ def run_app():
         st.title("📈 Cryptocurrency Market Dashboard")
     with col3:
         # Chat popover button
-        with st.popover("💬 Chat", use_container_width=True):
+        with st.popover("💬 Chat", width="stretch"):
             if "chat_history" not in st.session_state:
                 st.session_state.chat_history = []
 
@@ -108,20 +108,20 @@ def display_live_data(live_data, currency_symbol):
 
     display_df = prepare_live_data_table(live_data, currency_symbol)
 
+    symbol = "$" if currency_symbol == "USD" else "€"
+
     st.dataframe(
         display_df,
         column_config={
-            "Rank": st.column_config.NumberColumn("Rank"),
+            "Rank": st.column_config.NumberColumn("Rank", format="%d"),
             "name": st.column_config.TextColumn("Name"),
             "image": st.column_config.ImageColumn("Logo", width="small"),
             "symbol": st.column_config.TextColumn("Symbol"),
-            "current_price": st.column_config.NumberColumn(f"Price ({currency_symbol})"),
-            "market_cap": st.column_config.NumberColumn("Market Cap"),
-            "Dominance (%)": st.column_config.NumberColumn("Dominance (%)", format="%.2f%%"),
-            "Circulating Supply": st.column_config.NumberColumn("Circulating Supply"),
-            "total_volume": st.column_config.NumberColumn("Total Volume"),
-            "All Time High": st.column_config.NumberColumn(f"All Time High ({currency_symbol})"),
-            "All Time High Change %": st.column_config.NumberColumn("ATH Change (%)", format="%.2f%%"),
+            "current_price": st.column_config.TextColumn(f"Price ({currency_symbol})"),
+            "market_cap": st.column_config.TextColumn("Market Cap"),
+            "total_volume": st.column_config.TextColumn("Total Volume"),
+            "Circulating Supply": st.column_config.TextColumn("Circulating Supply"),
+            "All Time High": st.column_config.TextColumn(f"All Time High ({currency_symbol})"),
             "All Time High Date": st.column_config.DateColumn("ATH Date", format="YYYY-MM-DD"),
         },
         hide_index=True,
@@ -138,11 +138,9 @@ def prepare_live_data_table(data, currency_symbol):
         'symbol': 'symbol',
         'current_price': 'current_price',
         'market_cap': 'market_cap',
-        'market_cap_percentage': 'Dominance (%)',
         'circulating_supply': 'Circulating Supply',
         'total_volume': 'total_volume',
         'ath': 'All Time High',
-        'ath_change_percentage': 'All Time High Change %',
         'ath_date': 'All Time High Date'
     }
 
@@ -150,13 +148,28 @@ def prepare_live_data_table(data, currency_symbol):
     df = df[display_columns]
     df = df.rename(columns=column_mapping)
 
+    # Format dates
     if 'All Time High Date' in df.columns:
         df['All Time High Date'] = pd.to_datetime(df['All Time High Date']).dt.date
 
-    if 'Dominance (%)' in df.columns:
-        df['Dominance (%)'] = df['Dominance (%)'] * 100
+    # --- Formatting numerical columns ---
+    symbol = "$" if currency_symbol == "USD" else "€"
 
-    return df
+    # Columns with 2 decimals and symbol
+    for col in ['current_price', 'All Time High']:
+        if col in df.columns:
+            df[col] = df[col].apply(lambda x: f"{symbol}{x:,.2f}")
+
+    # Columns with 0 decimals and symbol
+    for col in ['market_cap', 'total_volume']:
+        if col in df.columns:
+            df[col] = df[col].apply(lambda x: f"{symbol}{x:,.0f}")  # Adicionado símbolo
+
+    # Circulating Supply: without symbol, two decimal places
+    if 'Circulating Supply' in df.columns:
+        df['Circulating Supply'] = df['Circulating Supply'].apply(lambda x: f"{x:,.2f}")
+
+    return df  # <-- The return should be here, with no code after it
 
 def display_candlestick_chart(coin_id, currency, days):
     if days == 1:
@@ -180,9 +193,8 @@ def display_candlestick_chart(coin_id, currency, days):
         candlestick_data = get_candlestick_data(coin_id, currency, days)
 
     if candlestick_data is not None and not candlestick_data.empty:
-        # Pass the currency to the chart function for proper axis label and tick prefix
         chart = create_candlestick_chart(candlestick_data, coin_id, currency.upper())
-        st.plotly_chart(chart, use_container_width=True)
+        st.plotly_chart(chart, use_container_width=True)  # Corrigido
 
         col1, col2, col3, col4 = st.columns(4)
         with col1:

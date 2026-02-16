@@ -29,6 +29,13 @@ class MarketDataFormatter:
         elif num >= 1e3:
             return f"{num/1e3:.2f}K"
         return f"{num:.2f}"
+    
+    @staticmethod
+    def format_currency(value, currency="USD", decimals=2):
+        """Format a currency value with symbol and thousand separators."""
+        symbols = {"usd": "$", "eur": "€", "USD": "$", "EUR": "€"}
+        symbol = symbols.get(currency, "$")
+        return f"{symbol}{value:,.{decimals}f}"
 
 
 # CHART CREATION FUNCTIONS
