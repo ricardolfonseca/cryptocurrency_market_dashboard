@@ -28,7 +28,6 @@ The dashboard fetches data from the [CoinGecko API](https://www.coingecko.com/en
 ### **Live Table**
 - **Rank** – Market cap rank.
 - **Name & Logo** – Cryptocurrency name and official icon.
-- **Symbol** – Ticker symbol.
 - **Current Price** – Latest market price in selected currency (with thousands separators).
 - **Market Cap** – Total market capitalization (circulating supply × price).
 - **Total Volume** – 24-hour trading volume.
@@ -44,7 +43,6 @@ The dashboard fetches data from the [CoinGecko API](https://www.coingecko.com/en
 - Built with Google **Gemini 2.0 Flash**.
 - Understands natural language questions about cryptocurrencies.
 - Uses the live market data from the dashboard as context.
-- **Does not perform currency conversions** – instead suggests changing the currency in the sidebar.
 
 ---
 
@@ -101,7 +99,7 @@ streamlit run app.py
 cryptocurrency_market_dashboard/
 ├── app.py                         # Main Streamlit application (view)
 ├── controller/
-│   └── controller.py              # Lightweight controller (orchestrates model and view)
+│   └── controller.py              # Controller (orchestrates model and view)
 ├── model/
 │   ├── crypto_data_provider.py    # CoinGecko API calls (class)
 │   ├── gemini_chat.py             # Gemini chatbot logic (class)
@@ -119,7 +117,7 @@ cryptocurrency_market_dashboard/
 
 ## 🔧 Tech Stack
 
-- 🐍 Python 3.11 – Core language.  
+- 🐍 Python – Core language.  
 - 🖥 Streamlit – Rapid UI development.  
 - 📊 Plotly – Interactive charts.  
 - 🌐 CoinGecko API – Real-time and historical crypto data.  
@@ -147,7 +145,7 @@ This project evolved through several refactors to achieve a clean MVC structure 
 
 ## 🙌 Contributing
 
-Contributions are welcome! Feel free to open issues or submit pull requests. For major changes, please discuss first.
+Contributions are welcome! Feel free to open issues or submit pull requests.
 
 ---
 
